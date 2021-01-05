@@ -1,0 +1,53 @@
+﻿
+
+15. Save the ItemsDictionary
+14. Save the data
+	Update and Save the Subject1 Data.txt file
+13. 20210104 In the code-behind, Manage Tree Lbx dispaly with a List<String>. As Each item is added to the
+	tree add it first to the list. Use the list size, before addition, to determine the number of spaces 
+	to add to the list. Use the List's index aa the way to determing the position of the lead char
+	and use the LastIndexOf '^' to get the position of the current number of children
+12. Creat Method to move an item to the Tree List
+11. In StringHelper class create method to create the list string for an item and add it to the items listbox
+10. Create Click method for Add Root Item
+	Create a new Root Item
+	Update the Subjects number of Roots
+	Add the new Item to the ItemsDictionary
+9. In StringHelper Class create method to return an alpha number
+8. Add a NumberOfRootItems to the subject folder and all methods
+7. Create an Instructions Menu with a MenuItem about how to enable a new subect 
+6. In The DataModels folder create an Items class which will hold
+	about all itms in this subjects hierarchy. 
+	It will have a default constructor and the following fields
+		LeedingChar ( a char of '+' or '-) indicating whether this item has children or not
+		ItemsText (the text the User typed into the tbxItemText TextBox)
+		ItemID (and Alpha number indicating the items Parent and ChildPosition)
+		ItemsNUmberOfChildren (an integer)
+		ParentsID (and Alpha number indicating the items Parent and ChildPosition)
+		ParentsNumberOfChildren (and integer)
+		TerminalNode (a boolean value)
+5. Create two properties in the subjects class, AlphaBase and DataFilePath
+4. 20210104 In the Project, create a  DataModles folder and in it 
+	create a sattic Subjects class to hold data about the subjects and
+	to communicate with the data files
+-----------
+3. The FileOpen menu Item allows the user to use the FileOpenDialog to find this file
+	and open it and reade in and extract the values for the Subject's name and AlphaBase
+	The name is sent to the TextBlock, tbkMessage Text property for display
+2. Created a structure to hold the data files for the
+	subjets being studies. In the OneDrive's Documents Folder
+	there is a _StudyFolder that will hold all of the various
+	subjects data files. When the user creates a sub-folder
+	in it for a particular subject, the name of the sub-folder
+	should be the name of the subject. The User should also
+	create a txt file in the new subject subfolder whose name
+	is also the name of the subjet with the word data appended ie:
+		Documents
+			 _StudyFolder
+				Subject1
+					Subject1 Data.txt
+	There should be two lines in this text file, the first identifying the AlphaBase and the second the subject name
+		AlphaBase^1
+		Name^Subject1
+
+1. 20210102 Created xaml for main window
