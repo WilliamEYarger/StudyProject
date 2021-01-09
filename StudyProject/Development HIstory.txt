@@ -1,5 +1,25 @@
 ﻿
+23. 20210109 Corrected errors in save file and in add child and aparently everything works
+	Copy and Commit
+- - - - - - -
+22.	Create a new Save file method
 
+- - - - - - -
+21.	Create a new OpenSubjectFile method in Subjects
+
+20. Call OpenDataFiles(string SubjectFolderPath)
+	a. // Extract the last Delimited entry as the Subject Name can in Subjects create a SubjectName property
+19. In the Subjects class create a property of SubjectsFolderPath and send the folder path to it
+18. Install NuGet Package Microsoft.WindowsAPICodePack-Shell To allow you do get the Name of a folder
+	The User can name the subject by creating a new folder with the name of the subject or selecct one 
+	that is already created
+17. Restructure the file storage system so that the user only needs to create a folder whose name is that of the subject
+	and the program creates all necessary files
+	a. The first two lines will contain the AlphaBase (initial default = 1) and the number of roots (default = 0)
+	b.	All subsequent lines will be delimited dictionary file lines
+
+16. 20210105 Comit to gitHub and creat new "dev" branch
+-------
 15. Save the ItemsDictionary
 14. Save the data
 	Update and Save the Subject1 Data.txt file

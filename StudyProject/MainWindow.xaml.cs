@@ -6,6 +6,8 @@ using StudyProject.HelperMethods;
 using StudyProject.DataModels;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.WindowsAPICodePack.Dialogs;
+
 
 namespace StudyProject
 {
@@ -29,70 +31,66 @@ namespace StudyProject
 
         #region FileOpen
         /// <summary>
-        ///  Select the folder which holds the data you want to work on
-        ///  using the file dialogue. It will get the Alpha base
-        ///  and the Subject's Name and send them and the Path to the
-        ///  folder to the Subjects class it will then call on the Subjects
-        ///  folder OpenDataFiles metod to load all of the data about this
-        ///  subject
+        /// This is a Major Revisioin beginning in the dev brance of 20210105
+        /// The User will only create the folder to hold the subject 
+        /// (whose name is that of the Subject) and the program will create all needed files
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void Click_FileOpen(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog ofd = new OpenFileDialog();
-            //ofd.Filter = "Text  Document (*.txt)";
-            if (ofd.ShowDialog() == true)
+            // Get the Name of the Subject folder
+            CommonOpenFileDialog dialog = new CommonOpenFileDialog();
+            dialog.IsFolderPicker = true;
+            string FolderPath = "";
+            if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
-                var FilePath = ofd.FileName;
-                var RevisedFilePath = FilePath.Replace('\\','/');
-                var PosLastSlash = RevisedFilePath.LastIndexOf('/');
-                var FolderPath = RevisedFilePath.Substring(0, PosLastSlash+1);
-                Subjects.DataFolderPath = FolderPath;
-
-                //Send data file path to Subjects class
-                Subjects.OpenDataFiles(FilePath);
-
-                // Open the dictgionary file
-                Subjects.OpenDictionaryFile();
-
-                // Get the Subject Name and  publish it in tbxMessage
-                tbkMessage.Text = Subjects.SubjectName;
-
-               
+                FolderPath = dialog.FileName+'\\';
             }
-            
-        }
+
+            // Send this to the Subjects SubjectsFolderPath
+            Subjects.SubjectsFolderPath = FolderPath;
+
+            // Get the number of '\\'s in FolderPath
+            var NumberOfSlashes = StringHelper.ReturnNumberOfDeliniters(FolderPath, '\\');
+
+
+            // Get the Subjects Name from the item a position NumberOfSlashes -1
+            var FolderName = StringHelper.ReturnItemAtPos(FolderPath, '\\', NumberOfSlashes - 1);
+
+            // Set Subjects SubjectName
+            Subjects.SubjectName = FolderName;
+
+            // Send FolderName to tbkMessage
+            tbkMessage.Text = FolderName;
+
+            Subjects.OpenSubjectFile();
+
+            // Get List of Root Items, if any, to display in the lbxItems on startup
+
+            List<String> ListOfRootStrings = Subjects.ItemsListBoxStringsList;
+
+            if(ListOfRootStrings.Count > 0)
+            {
+                foreach(string RootString in ListOfRootStrings)
+                {
+                    lbxItems.Items.Add(RootString);                   
+                }
+            }
+
+           
+        }// End FileOpen
+
+
         #endregion FileOpen 
 
         #region File Save
         private void Click_FileSave(object sender, RoutedEventArgs e)
         {
-            // Get the New Number of Roots
-            var NewNumberOfRoots = Subjects.NumberOfRoots;
-
-            // Get the  SubjectData array
-            string[] SubjectDataArray = Subjects.SubjectData;
-
-            // Update the number of roots
-            string NumberOfRootsString = SubjectDataArray[2];
-
-            // Get the Number of children line
-            var NumberOfChildrenStr = SubjectDataArray[2];
-
-            // Update the number of children in this line
-            StringHelper.ReplaceItemAtPosition(ref NumberOfChildrenStr, '^', 1, NewNumberOfRoots.ToString());
-
-            // Replace this updated number of children line
-            SubjectDataArray[2] = NumberOfChildrenStr;
-
-            // Update the SubjectData array
-            Subjects.SubjectData = SubjectDataArray;
-
-            Subjects.SaveSubjectDataFile();
-
-            Subjects.SaveDataDictionary();
-
+            Subjects.SaveSubjectsFile();
+            // Clear any data in the list boxes
+            lbxItems.Items.Clear();
+            lbxTree.Items.Clear();
         }
         #endregion File Save
 
@@ -159,7 +157,7 @@ namespace StudyProject
             Subjects.ItemsDictionary = ItemsDictionary;
 
             //Get the Display string for this item
-            var DisplayString = StringHelper.CreateDisplayString(NewRootItem.LeedingChar, NewRootItem.ItemText, NewRootItem.ItemID, NewRootItem.ItemsNumberOfChildren);
+            var DisplayString = Subjects.CreateDisplayString(NewRootItem);
 
 
             // add this string to the items listbox
@@ -171,6 +169,11 @@ namespace StudyProject
         #region Add Child Item
         private void Click_AddChildItem(object sender, RoutedEventArgs e)
         {
+            /*
+             20210108 the problem with the lbxTree display is in this method 
+             */
+
+
             // Make sure that you have selected an item in the tree listbox
             if(lbxTree.SelectedItem == null)
             {
@@ -215,7 +218,7 @@ namespace StudyProject
             CurrentNumberOfChildren += 1;
 
             // Set the Parents Number of Children to this incremented value
-            ParentItem.ItemsNumberOfChildren = CurrentNumberOfChildren;
+           ParentItem.ItemsNumberOfChildren = CurrentNumberOfChildren;
 
             //Update Parents leeding char
             ParentItem.LeedingChar = '+';
@@ -239,71 +242,117 @@ namespace StudyProject
             Subjects.ItemsDictionary = ItemsDictionary;
 
             //Create the childs display string
-            var ChildsDisplayString = StringHelper.CreateDisplayString(NewChildItem.LeedingChar, NewChildItem.ItemText, 
-                NewChildItem.ItemID, NewChildItem.ItemsNumberOfChildren);
+            var ChildsDisplayString = Subjects.CreateDisplayString(NewChildItem);
 
             // Display the Childs display string in the items listbox
             lbxItems.Items.Add(ChildsDisplayString);
+            /*
+             * At this point I need to get all the items in lbxTree, 
+             * convert them to a List<string>
+             * update the Parent's string
+             * clear lbxTree
+             * reload the updated List
+             */
 
-            // Convert all of the items in the tree list box to an array
-
-            // creat a counter for the array of strings holding the items in the tree list box
-            var CurrentTreeItemsCount = lbxTree.Items.Count;
-
-            // Create a string array of this size
-            string[] TreeArray = new string[CurrentTreeItemsCount];
-
-            // Create a new string [] to hold the revised  tree listbox
-            string [] NewTreeArray = new string[CurrentTreeItemsCount];
-
-            // Create a counter
-            int Cntr = 0;
-
-            // Process each item in this array, updating it as necessary
-            for(int i =0; i<lbxTree.Items.Count; i++)
+            // Convert all of the items in the tree list box to an List<string>
+            List<string> CurrnetTreeItems = new List<string>();
+            
+            // Load all the items in lbxTree into this list
+            foreach(string TreeItem in lbxTree.Items)
             {
-                var displayLine = lbxTree.Items[i].ToString();
-                // determine if this line is the parents line
-                int IndexOfParentsID = displayLine.IndexOf(ParentsID);
-                if(IndexOfParentsID != -1)
-                {
-                    // Repalce leeding char with a '+'
-                    string tempString = displayLine.Trim();
-                    //tring somestring = "abcdefg";
-                    StringBuilder sb = new StringBuilder(tempString);
-                    sb[0] = '+'; // index starts at 0!
-                    tempString = sb.ToString();
-
-                    // convert tempSring to an array of strigs
-                    string[] arrayOfSections = tempString.Split('^');
-
-                    // Replaced the current number of children with  CurrentNumberOfChildren
-                    arrayOfSections[2] = CurrentNumberOfChildren.ToString();
-
-                    // Add back the leading spaces, if any
-
-                    int addSpacesNumber = (ParentsID.Length - 1) * 2;
-                    string spacesString = new string(' ', addSpacesNumber);
-
-                    //Reassemble the string
-                    var newDisplayString = spacesString + arrayOfSections[0] +'^'+  arrayOfSections[1] + '^' + arrayOfSections[2];
-                    NewTreeArray[Cntr] = newDisplayString;
-                }
-                else
-                {
-                    NewTreeArray[Cntr] = displayLine;
-                }
-            }// End foreach 
-
-            // destroy the old tree listbox
-            lbxTree.Items.Clear();
-
-            // add the items in NewTreeArray to the tree ListBox
-            foreach(string DisplayLine in NewTreeArray)
-            {
-                lbxTree.Items.Add(DisplayLine);
+                CurrnetTreeItems.Add(TreeItem);
             }
 
+            // Convert this list to a string []
+            string[] TreeItemsArray = CurrnetTreeItems.ToArray();
+
+            // Create a new Display string for the updated Parent
+            var NewParentsDisplayString = StringHelper.CreateDisplayString(ParentItem.LeedingChar, ParentItem.ItemText,
+                ParentItem.ItemID, ParentItem.ItemsNumberOfChildren);
+
+            // Cycle through the list until you fing the Parent's ID
+            foreach(string TreeItem in lbxTree.Items)
+            {
+                var ID = StringHelper.ReturnItemAtPos(TreeItem, '^', 1);
+                if(ID == ParentsID)
+                {
+                    // Get the position of the Parent display string in TreeItemsArray from the length of its ID
+                    var PosOfParent = ID.Length / Subjects.AlphaBase - 1;
+                    //Before Adding NewParentsDisplayString back to the tree update its leading spaces
+                    int addSpacesNumber = (ID.Length - 1) * 2;
+                    string spacesString = new string(' ', addSpacesNumber);
+                    NewParentsDisplayString = spacesString + NewParentsDisplayString;
+                    TreeItemsArray[PosOfParent] = NewParentsDisplayString;
+                    break;
+                }
+            }
+
+            // Clear the TreeList
+            lbxTree.Items.Clear();
+
+            // Cycle through TreeItemsArray addint them to lbxTree
+
+            foreach(string TreeItemDisplayString in TreeItemsArray)
+            {
+                lbxTree.Items.Add(TreeItemDisplayString);
+            }
+
+            //// creat a counter for the array of strings holding the items in the tree list box
+            //var CurrentTreeItemsCount = lbxTree.Items.Count;
+
+            //// Create a string array of this size
+            //string[] TreeArray = new string[CurrentTreeItemsCount];
+
+            //// Create a new string [] to hold the revised  tree listbox
+            //string [] NewTreeArray = new string[CurrentTreeItemsCount];
+
+            //// Create a counter
+            //int Cntr = 0;
+
+            //// Process each item in this array, updating it as necessary
+            //for(int i =0; i<lbxTree.Items.Count; i++)
+            //{
+            //    var displayLine = lbxTree.Items[i].ToString();
+            //    // determine if this line is the parents line
+            //    int IndexOfParentsID = displayLine.IndexOf(ParentsID);
+            //    if(IndexOfParentsID != -1)
+            //    {
+            //        // Repalce leeding char with a '+'
+            //        string tempString = displayLine.Trim();
+            //        //tring somestring = "abcdefg";
+            //        StringBuilder sb = new StringBuilder(tempString);
+            //        sb[0] = '+'; // index starts at 0!
+            //        tempString = sb.ToString();
+
+            //        // convert tempSring to an array of strigs
+            //        string[] arrayOfSections = tempString.Split('^');
+
+            //        // Replaced the current number of children with  CurrentNumberOfChildren
+            //        arrayOfSections[2] = CurrentNumberOfChildren.ToString();
+
+            //        // Add back the leading spaces, if any
+
+            //        int addSpacesNumber = (ParentsID.Length - 1) * 2;
+            //        string spacesString = new string(' ', addSpacesNumber);
+
+            //        //Reassemble the string
+            //        var newDisplayString = spacesString + arrayOfSections[0] +'^'+  arrayOfSections[1] + '^' + arrayOfSections[2];
+            //        NewTreeArray[Cntr] = newDisplayString;
+            //    }
+            //    else
+            //    {
+            //        NewTreeArray[Cntr] = displayLine;
+            //    }
+            //}// End foreach 
+
+            //// destroy the old tree listbox
+            //lbxTree.Items.Clear();
+
+            //// add the items in NewTreeArray to the tree ListBox
+            //foreach(string DisplayLine in NewTreeArray)
+            //{
+            //    lbxTree.Items.Add(DisplayLine);
+            //}
 
 
         }// End CreateChild Node
@@ -319,60 +368,74 @@ namespace StudyProject
         private void Click_MoveToTree(object sender, RoutedEventArgs e)
         {
             // Get the selected item string
-            var SelectedItem = lbxItems.SelectedItem.ToString();
+            var MovedItemsDisplayString = lbxItems.SelectedItem.ToString();
 
+            // Create a List<string> of the current tree items
+            List<string> ListOfTreeItems = new List<string>();
 
-            //Add this Item to the TreeList
-            Subjects.AddItemToTreeList(SelectedItem);
+            // Add all items currently in lbxTree to ListOfTreeItems
 
-            // Clear the lbxTree
+            // It there are items in lbxTree add them to TreeDisplayString
+            if (lbxTree.Items.Count > 0)
+            {
+                foreach (string TreeDisplayString in lbxTree.Items)
+                {
+                    ListOfTreeItems.Add(TreeDisplayString);
+                }
+            }
+            
+
+            // Adjust the header string of MovedItemsDisplayString
+            string MovedItemsID = StringHelper.ReturnItemAtPos(MovedItemsDisplayString, '^', 1);
+            var LengthOfHeaderString = (MovedItemsID.Length - Subjects.AlphaBase) * 2;
+            var LeadingSpacesString = new String(' ', LengthOfHeaderString);
+            MovedItemsDisplayString = LeadingSpacesString + MovedItemsDisplayString;
+
+            // Add the adjusted selected item string to ListOfTreeItems
+            ListOfTreeItems.Add(MovedItemsDisplayString);
+
+            // Clear the old values in lbxTree
             lbxTree.Items.Clear();
 
-            //Get the Update treelist
-            List<string> NewTreeList = Subjects.ReturnTreeList();
-
-            //Fill lbxTree with this list
-            foreach(string Item in NewTreeList)
+            // Recreate lbxTree with ListOfTreeItems
+            foreach(string DisplayString in ListOfTreeItems)
             {
-                lbxTree.Items.Add(Item);
+                lbxTree.Items.Add(DisplayString);
             }
 
-            // Clear the items List
+            // Create an Item object of the moved item to see if it has children
+            Items MovedItem = Subjects.ReturnItemInDictionary(MovedItemsID);
+
+
+            // Clear any items currently in the lbxItem
             lbxItems.Items.Clear();
 
-            //// Get the Position of the Item in the Tree that was selected as the Parent
-            //var SelectedItemIndex = lbxItems.Items.IndexOf(SelectedItem);
+            // If MovedItem has children, get their display strings
+            if (MovedItem.ItemsNumberOfChildren > 0)
+            {
+                List<string> ListOfItemsChildrensDisplayStrings = new List<string>();
+                ListOfItemsChildrensDisplayStrings = Subjects.ReturnDisplaystringsOfItemsChildren(MovedItemsID);
 
-            //// Get the string that represents the current number of children of this item
-            //var NumberOfChildrenString = StringHelper.ReturnItemAtPos(SelectedItem, '^', 2);
 
-            //// Convert this to an int
-            //var CurrentNumberOfChildren = Int32.Parse(NumberOfChildrenString);
+                // Add Display strings in ListOfItemsChildrensDisplayStrings to lbxItems
+                foreach (string DisplayLine in ListOfItemsChildrensDisplayStrings)
+                {
+                    lbxItems.Items.Add(DisplayLine);
+                }
+            }
 
-            ////Increment it
-            //CurrentNumberOfChildren += 1;
+            
 
-            //// Reconvert it to a String
-            //NumberOfChildrenString = CurrentNumberOfChildren.ToString();
 
-            //// Add This Item to the TreeList
-            //Subjects.AddItemToTreeList(SelectedItem);
 
-            //// Get the current TreeList
-            //List<string> CurrentTreeList = Subjects.ReturnTreeList();
 
-            //// Get a new TreeList with the Parents String updated
-            //List<string> UpdatedTreeList = Subjects.ReturnUpdatedTreeList(CurrentTreeList, SelectedItemIndex, CurrentNumberOfChildren);
 
-            //// Clear all of the items in the tree list
-            //lbxItems.Items.Clear();
+            
 
-            //// reconstitute the tree swith the UpdatedTreeList
 
-            //foreach(string Item in UpdatedTreeList)
-            //{
-            //    lbxItems.Items.Add(Item);
-            //}
+
+
+
         }
         #endregion Click_MoveToTree
 

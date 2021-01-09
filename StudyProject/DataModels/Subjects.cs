@@ -10,10 +10,30 @@ namespace StudyProject.DataModels
 
     public static class Subjects
     {
+        // TODO- There is a problem in saving the files and in reconstructing lbxTree after adding a new child
 
+        #region Private Properties
+        private static List<string> TreeItemsList;
+
+        private static string SubjectFilePath;
+
+        #endregion Private Properties
 
 
         #region Properties
+
+        #region ItemsListBoxStringsList
+
+        private static List<string> _ItemsListBoxStringsList = new List<string>();
+
+        public static List<string> ItemsListBoxStringsList
+        {
+            get { return _ItemsListBoxStringsList; }
+            set { _ItemsListBoxStringsList = value; }
+        }
+
+
+        #endregion ItemsListBoxStringsList
 
         #region SubjectData
         private static string[] _SubjectData;
@@ -27,15 +47,7 @@ namespace StudyProject.DataModels
 
         #endregion SubjectData
 
-        #region SubjectName
-
-        private static string _SubjectName;
-
-        public static string SubjectName
-        {
-            get { return _SubjectName; }
-            set { _SubjectName = value; }
-        }
+       
 
         #endregion SubjectName
 
@@ -49,16 +61,29 @@ namespace StudyProject.DataModels
         }
         #endregion
 
+        #region SubjectName
 
-        #region DataFolderPath
-        private static string dataFolderPath;
+        private static string _SubjectName;
 
-        public static string DataFolderPath
+        public static string SubjectName
         {
-            get { return dataFolderPath; }
-            set { dataFolderPath = value; }
+            get { return _SubjectName; }
+            set { _SubjectName = value; }
         }
-        #endregion  DataFolderPath 
+
+        #endregion SubjectName
+
+        #region Properties
+
+        #region SubjectsFolderPath
+        private static string subjectsFolderPath;
+
+        public static string SubjectsFolderPath
+        {
+            get { return subjectsFolderPath; }
+            set { subjectsFolderPath = value; }
+        }
+        #endregion  SubjectsFolderPath 
 
 
         #region NumberOfRoots
@@ -89,90 +114,155 @@ namespace StudyProject.DataModels
 
         #endregion ItemsDictionary
 
-        #region TreeItemsList
-
-        //private static List<string> _TreeItemsList;
-
-        //public static List<string> TreeItemsList
-        //{
-        //    get { return _TreeItemsList; }
-        //    set { _TreeItemsList = value; }
-        //}
-
-
-
-        #endregion TreeItemsList
+      
 
         #endregion Properties
 
         #region Public Methods
 
-        #region Open Data Files
+        #region OpenSubjectFile
 
-        public static void OpenDataFiles(string FilePath)
+
+        public static void OpenSubjectFile()
         {
-            // Read the file as one string.
-            string text = File.ReadAllText(FilePath);
+            // Create path to this subjects  data file
+            var SubjectsDataFile = SubjectsFolderPath + SubjectName + ".txt";
+            SubjectFilePath = SubjectsDataFile;
 
-            // Read each line of the file into a string array. Each element
-            // of the array is one line of the file.
-            string[] lines = System.IO.File.ReadAllLines(FilePath);
+            // Test to see if this file exist and if not create it
+            if (!File.Exists(SubjectsDataFile))
+            {
+                // Create a string array to hold the first two lines
+                string[] InitialLinesArray = new string[2];
 
-            string[] SubjectDataStringArray = new string[3];
-            // Place these lines in the SubjectData string array
-            SubjectDataStringArray[0] = lines[0];
-            SubjectDataStringArray[1] = lines[1];
-            SubjectDataStringArray[2] = lines[2];
+                // the first line is the default AlphaNumberBase string
+                AlphaBase = 1;
+                InitialLinesArray[0] = AlphaBase.ToString();
 
-            // Set SubjectData to this array
-            SubjectData = SubjectDataStringArray;
+                // The initial number of Roots is 0
+                NumberOfRoots = 0;
+                InitialLinesArray[1] = NumberOfRoots.ToString();
 
-            //Get the alpha base and send it to the Subject class
-            var AlphaBaseString = StringHelper.ReturnItemAtPos(lines[0], '^', 1);
+                //Write all of these lines to the SubjectsDataFile
+                File.WriteAllLines(SubjectsDataFile, InitialLinesArray);
+                return;
+                
+            }
 
-            var AlphaBase = Int32.Parse(AlphaBaseString);
-            Subjects.AlphaBase = AlphaBase;
+            // The SubjectsDataFile already exists so read in all of its lines
+            string[] SubjectsDataFileStringArray = File.ReadAllLines(SubjectsDataFile);
 
-            SubjectName = StringHelper.ReturnItemAtPos(lines[1], '^', 1);
-           //tbkMessage.Text = SubjectName;
+            List<string> DelimitedDictionaryItems = new List<string>();
+            
+            // Cycle through SubjectsDataFileStringArray assiginig the to their values
+            for (int i =0; i< SubjectsDataFileStringArray.Length; i++)
+            {
+                // Assign Alpha base
+                if (i == 0)
+                {
+                    AlphaBase = Int32.Parse(SubjectsDataFileStringArray[i]);
+                }
+                else if (i == 1)
+                {
+                    NumberOfRoots = Int32.Parse(SubjectsDataFileStringArray[i]);
+                }
+                else
+                {
+                    // These are all dictionary lines
+                    DelimitedDictionaryItems.Add(SubjectsDataFileStringArray[i]);
+                }
 
-            // Get the number of root items and send it to the subjects folder
-            var NumberOfRootsStr = StringHelper.ReturnItemAtPos(lines[2], '^', 1);
 
-            // Get the Item ID
-            var NumberOfRoots = Int32.Parse(NumberOfRootsStr);
-            Subjects.NumberOfRoots = NumberOfRoots;
+            }// END  Cycle through SubjectsDataFileStringArray assiginig the to their values
 
-            // Create a TreeList in the Subjects object to manage additions to lbxTree
-            Subjects.CreateTreeList();
-        }
+            // Create a List<string> RootIDs
+            List<string> RootIDs = new List<string>();
 
-        internal static void SaveSubjectDataFile()
-        {
-            var DataFilePath = DataFolderPath + SubjectName + " Data" + ".txt";
-            File.WriteAllLines(DataFilePath, SubjectData);
-        }
-        #endregion Open Data Files
+            // Cycle through DictionaryLinesArray extracting  the properties of each Item object and Add Root ID to
+            for (int i = 0; i < DelimitedDictionaryItems.Count; i++)
+            {
+                // get the next line in DictionaryLinesArray
+                var thisLine = DelimitedDictionaryItems[i];
+
+                // create thisItemsPropertyStringsArray to hold the properties of each new item
+                string[] thisItemsPropertyStringsArray = thisLine.Split('ɀ');
+
+                // create a new Item object
+                Items NewItemObj = new Items();
+
+                // get the leeding character
+                char[] leedingCharStringChars = thisItemsPropertyStringsArray[0].ToCharArray();
+                char leedingChar = leedingCharStringChars[0];
+                NewItemObj.LeedingChar = leedingChar;
+                NewItemObj.ItemText = thisItemsPropertyStringsArray[1];
+                NewItemObj.ItemID = thisItemsPropertyStringsArray[2];
+
+                // Deteermine if this is a root ID and if so add it to RootIDs
+                if(NewItemObj.ItemID.Length == 1)
+                {
+                    RootIDs.Add(NewItemObj.ItemID);
+                }
+
+                NewItemObj.ItemsNumberOfChildren = Int32.Parse(thisItemsPropertyStringsArray[3]);
+                NewItemObj.ParentsID = thisItemsPropertyStringsArray[4];
+                NewItemObj.ParentsNumberOfChildren = Int32.Parse(thisItemsPropertyStringsArray[5]);
+                var TreminalCharStr = thisItemsPropertyStringsArray[6];
+                if (TreminalCharStr == "False")
+                {
+                    NewItemObj.TerminalNode = false;
+                }
+                else
+                {
+                    NewItemObj.TerminalNode = true;
+                }
+
+                var thisItemsID = NewItemObj.ItemID;
+                // Add this item to the ItemsDictionary
+                ItemsDictionary.Add(thisItemsID, NewItemObj);
+            }// END Cycle through DictionaryLinesArray extracting  the properties of each Item object
+
+
+            // Cycle through RootIDs creating ItemsListBoxStringsList, a list of root display strings to display upone opening
+            foreach (string ID in RootIDs)
+            {
+                Items NewItemsObject = new Items();
+                NewItemsObject = ReturnItemInDictionary(ID);
+                var DisplayString = CreateDisplayString(NewItemsObject);
+                ItemsListBoxStringsList.Add(DisplayString);
+            }// END Cycle through RootIDs creating ItemsListBoxStringsList, a list of root display strings to display upone opening
+
+        }// End OpenSubjectFile()
+
+
+
+
+        #endregion OpenSubjectFile
 
         #region Open Dictionary File
 
         public static void OpenDictionaryFile()
         {
-            var DictionaryPath = DataFolderPath + "temsDictionaryStrings.txt";
+            var DictionaryPath = SubjectsFolderPath + "temsDictionaryStrings.txt";
             string[] DicgtionaryArray = File.ReadAllLines(DictionaryPath);
         }
 
         #endregion Open Dictionary File
 
 
-        #region SaveDataDictionary
+        #region SaveSubjectsFile
 
-        public static void SaveDataDictionary()
+        public static void SaveSubjectsFile()
         {
-            // Create a list of strings to hold the data in the Items Dictionary
-            List<string> ItemsDistionaryStringsList = new List<string>();
+            // Create a List<string> OutputSubjectFileList to hold the strings to be written to the Subjects file
+            List<string> OutputSubjectFileList = new List<string>();
 
+            // Enter the AlphaBase
+            OutputSubjectFileList.Add(AlphaBase.ToString());
 
+            // Enter the Number of Roots
+            OutputSubjectFileList.Add(NumberOfRoots.ToString());
+
+           
             //Get each itme in the dictionary and convert its properties to a delimited string to story
             foreach (KeyValuePair<string, Items> kvp in _ItemsDictionary)
             {
@@ -192,17 +282,19 @@ namespace StudyProject.DataModels
                 string OutputString = LeedingChar.ToString() + D + ItemText + D + ItemID + D + ItemsNumberOfChildrenString + D + ParentID + D
                     + ParentsNumberOfChildrenString + D + TerminalNodeString;
 
-                ItemsDistionaryStringsList.Add(OutputString);
+                OutputSubjectFileList.Add(OutputString);
             }
 
-            var DictionaryFilePath = DataFolderPath + "ItemsDictionaryStrings.txt";
+            var DictionaryFilePath = SubjectsFolderPath + "ItemsDictionaryStrings.txt";
 
 
-            File.WriteAllLines(DictionaryFilePath, ItemsDistionaryStringsList);
+            File.WriteAllLines(SubjectFilePath, OutputSubjectFileList);
+
+           
         }
 
 
-        #endregion SaveDataDictionary
+        #endregion SaveSubjectsFile
 
         #region ReturnItemInDictionary
         public static Items ReturnItemInDictionary(string Key)
@@ -212,8 +304,8 @@ namespace StudyProject.DataModels
             {
                 return null;
 
-            }           
-                return NewItem;
+            }
+            return NewItem;
         }
 
         #endregion ReturnItemInDictionary
@@ -221,30 +313,20 @@ namespace StudyProject.DataModels
         #region TreeLise
 
 
-        // Construct a new TreeList
+       
 
-       public static List<string> TreeList;
-
-        /// <summary>
-        /// construct a new TreeList
-        /// </summary>
-       public static void CreateTreeList()
-        {
-            TreeList = new List<string>();
-        }
-
-        public static List<string> ReturnTreeList()
-        {
-            return TreeList;
-        }
-
-        // Add and Item to the TreeList
+        
         public static void AddItemToTreeList(string NewItem)
         {
-            var LeadingSpacesLength = TreeList.Count *2;
+            //If TreeItemsList is null create it
+            if (TreeItemsList == null)
+            {
+                TreeItemsList = new List<string>();
+            }
+            var LeadingSpacesLength = TreeItemsList.Count * (AlphaBase * 2);
             var LeadingSpacesString = new String(' ', LeadingSpacesLength);
             var StringToAdd = LeadingSpacesString + NewItem;
-            TreeList.Add(StringToAdd);
+            TreeItemsList.Add(StringToAdd);
         }
 
 
@@ -298,7 +380,87 @@ namespace StudyProject.DataModels
 
         }
 
+        internal static List<string> ReturnTreeList()
+        {
+            return TreeItemsList;
+        }
+
         #endregion TreeLise
+
+        #region Return Display strings of Items Children
+
+        internal static List<string> ReturnDisplaystringsOfItemsChildren(string movedItemID)
+        {
+            // Create a List<string> ChidrensDisplayString
+            List<string> ChidrensDisplayStringList = new List<string>();
+
+            // Get the length of the Item associated with this Id
+            var ParentsIDLength = movedItemID.Length;
+
+            // Calculate the length of this items childrens IS
+            var LengthChildID = ParentsIDLength + AlphaBase;
+
+
+            // Cycle through the ItemsDictionary looking for Items whose length is
+            //   1 AlphaBase longer than movedItemID and whose ID begins with movedItemID
+            foreach(KeyValuePair<string, Items> kvp in ItemsDictionary)
+            {
+                var key = kvp.Key;
+                var thisItem = kvp.Value;
+                if((thisItem.ItemID.Length == LengthChildID) && (thisItem.ItemID.IndexOf(movedItemID) == 0))
+                {
+                    // Get the Display string for thisItem
+                    var thisDisplayString = CreateDisplayString(thisItem);
+                    ChidrensDisplayStringList.Add(thisDisplayString);
+                }
+            }
+
+            return ChidrensDisplayStringList;
+
+
+        }
+
+
+
+        #endregion Return Display strings of Items Children
+
+        #region ReturnDisplayString
+
+        /// <summary>
+        /// Create a display string to show in a list box
+        /// </summary>
+        /// <param name="LeedingChar"> is a + or - </param>
+        /// <param name="Text"></param>
+        /// <param name="ID"> the Items AlphaNumber</param>
+        /// <param name="NumberOfChildren"> The Items number of Children</param>
+        /// <returns></returns>
+        public static string CreateDisplayString(Items thisItemsObject)
+        {
+
+            //char LeedingChar, string Text, string ID, int NumberOfChildren
+            char LeedingChar = thisItemsObject.LeedingChar;
+            string Text = thisItemsObject.ItemText;
+            string ID = thisItemsObject.ItemID;
+            int NumberOfChildren = thisItemsObject.ItemsNumberOfChildren;
+            string thisItemsListString;
+
+            int LengthOFItemText = Text.Length;
+            int addSpacesNumber = 100 - LengthOFItemText;
+            string spacesString = new string(' ', addSpacesNumber);
+            if (LeedingChar == '-')
+            {
+                thisItemsListString = "- " + Text + spacesString + '^' + ID + '^' + NumberOfChildren.ToString();
+            }
+            else
+            {
+                thisItemsListString = "+ " + Text + spacesString + '^' + ID + '^' + NumberOfChildren.ToString();
+            }
+
+
+            return thisItemsListString;
+        }
+
+        #endregion ReturnDisplayString
 
         #endregion Public Methods
 

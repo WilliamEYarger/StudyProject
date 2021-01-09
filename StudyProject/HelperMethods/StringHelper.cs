@@ -9,6 +9,28 @@ namespace StudyProject.HelperMethods
 {
     public static class StringHelper
     {
+        #region ReturnNumberOfDeliniters
+
+        public static int ReturnNumberOfDeliniters(string line, char del)
+        {
+            char[] LineCharArray = line.ToCharArray();
+            int count = 0;
+            for(int i=0; i< LineCharArray.Length; i++)
+            {
+                char thisChar = LineCharArray[i];
+                if (thisChar == del) count++;
+            }
+
+            return count;
+        }
+
+
+        #endregion ReturnNumberOfDeliniters
+
+
+
+
+
         #region ReturnItemAtPos
         public static string ReturnItemAtPos(string delString, char del, int Pos)
         {
@@ -17,6 +39,18 @@ namespace StudyProject.HelperMethods
         }
         #endregion ReturnItemAtPos
 
+        #region ReturnLastItem
+
+        public static string ReturnLastItem(string line, char del)
+        {
+            var PosLastDel = line.LastIndexOf(del);
+            var ReturnString = line.Substring(PosLastDel + 1);
+            return ReturnString;
+
+        }
+
+
+        #endregion ReturnLastItem
 
         #region ReturnLastAndUpdate
         public static string[] ReturnLastAndUpdate(string delString, char del)
@@ -87,7 +121,7 @@ namespace StudyProject.HelperMethods
         public static string CreateDisplayString(char LeedingChar, string Text, string ID, int NumberOfChildren)
         {
             string thisItemsListString;
-            
+
             int LengthOFItemText = Text.Length;
             int addSpacesNumber = 100 - LengthOFItemText;
             string spacesString = new string(' ', addSpacesNumber);
@@ -97,9 +131,9 @@ namespace StudyProject.HelperMethods
             }
             else
             {
-                thisItemsListString = "- " + Text + spacesString + '^' + ID + '^' + NumberOfChildren.ToString();
+                thisItemsListString = "+ " + Text + spacesString + '^' + ID + '^' + NumberOfChildren.ToString();
             }
-            
+
 
             return thisItemsListString;
         }
