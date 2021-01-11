@@ -297,63 +297,8 @@ namespace StudyProject
                 lbxTree.Items.Add(TreeItemDisplayString);
             }
 
-            //// creat a counter for the array of strings holding the items in the tree list box
-            //var CurrentTreeItemsCount = lbxTree.Items.Count;
-
-            //// Create a string array of this size
-            //string[] TreeArray = new string[CurrentTreeItemsCount];
-
-            //// Create a new string [] to hold the revised  tree listbox
-            //string [] NewTreeArray = new string[CurrentTreeItemsCount];
-
-            //// Create a counter
-            //int Cntr = 0;
-
-            //// Process each item in this array, updating it as necessary
-            //for(int i =0; i<lbxTree.Items.Count; i++)
-            //{
-            //    var displayLine = lbxTree.Items[i].ToString();
-            //    // determine if this line is the parents line
-            //    int IndexOfParentsID = displayLine.IndexOf(ParentsID);
-            //    if(IndexOfParentsID != -1)
-            //    {
-            //        // Repalce leeding char with a '+'
-            //        string tempString = displayLine.Trim();
-            //        //tring somestring = "abcdefg";
-            //        StringBuilder sb = new StringBuilder(tempString);
-            //        sb[0] = '+'; // index starts at 0!
-            //        tempString = sb.ToString();
-
-            //        // convert tempSring to an array of strigs
-            //        string[] arrayOfSections = tempString.Split('^');
-
-            //        // Replaced the current number of children with  CurrentNumberOfChildren
-            //        arrayOfSections[2] = CurrentNumberOfChildren.ToString();
-
-            //        // Add back the leading spaces, if any
-
-            //        int addSpacesNumber = (ParentsID.Length - 1) * 2;
-            //        string spacesString = new string(' ', addSpacesNumber);
-
-            //        //Reassemble the string
-            //        var newDisplayString = spacesString + arrayOfSections[0] +'^'+  arrayOfSections[1] + '^' + arrayOfSections[2];
-            //        NewTreeArray[Cntr] = newDisplayString;
-            //    }
-            //    else
-            //    {
-            //        NewTreeArray[Cntr] = displayLine;
-            //    }
-            //}// End foreach 
-
-            //// destroy the old tree listbox
-            //lbxTree.Items.Clear();
-
-            //// add the items in NewTreeArray to the tree ListBox
-            //foreach(string DisplayLine in NewTreeArray)
-            //{
-            //    lbxTree.Items.Add(DisplayLine);
-            //}
-
+            // Clear the tbxItemText
+            tbxItemText.Text = "";
 
         }// End CreateChild Node
 
@@ -424,20 +369,72 @@ namespace StudyProject
                 }
             }
 
-            
-
-
-
-
-
-            
-
-
-
-
-
         }
         #endregion Click_MoveToTree
+
+        #region ShowItemsChildren_Click
+
+        /// <summary>
+        /// When the user clicks this item in the TreeList Box
+        /// all of its children are displayed in the Items list box
+        /// and all of the items below it in the tree are removed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ShowItemsChildren_Click(object sender, RoutedEventArgs e)
+        {
+
+            //Make sure that an item in lbxTree was clicked
+            if((lbxItems.SelectedItem != null) || (lbxTree.SelectedItem == null) )
+            {
+                MessageBox.Show("You must select an Item in the Tree List to use this option");
+            }
+
+            // Get the ID of the Display String
+            var ThisItemsID = Subjects.ReturnDisplayStringID(lbxTree.SelectedItem.ToString());
+
+            // Get a List of the Display strings for the children of the selected item
+            List<string> ListOfChildrenOfItem = Subjects.ReturnDisplaystringsOfItemsChildren(ThisItemsID);
+
+            // TASK 1 show ListOfChildrenOfItem in lbxItems
+
+            // Clear lbxItems
+            lbxItems.Items.Clear();
+
+            // Load all of the strings in ListOfChildrenOfItem into lbxItems
+            foreach(string DisplayString in ListOfChildrenOfItem)
+            {
+                _ = lbxItems.Items.Add(DisplayString);
+            }
+
+
+
+            // TASK 2 delete all items in lbxTree below the selected item
+            // Get the index of the selected item
+            int ItemsIndex = lbxTree.SelectedIndex;
+
+
+            // create an List of the lbxTree items
+            List<string> TreeItemsList = new List<string>();    
+            foreach(string DisplayString in lbxTree.Items)
+            {
+                TreeItemsList.Add(DisplayString);
+            }
+
+            // create an array of this list
+            string[] TreeItemsArray = TreeItemsList.ToArray();
+
+            //Clear the Tree List
+            lbxTree.Items.Clear();
+
+            // enter only the items up to the selected Item back into the tree
+            for(int i =0; i<= ItemsIndex; i++)
+            {
+                lbxTree.Items.Add(TreeItemsArray[i]);
+            }
+
+        }// End ShowItemsChildren_Click
+        #endregion ShowItemsChildren_Click
 
         private void Click_OpenWorkPage(object sender, RoutedEventArgs e)
         {
@@ -450,27 +447,95 @@ namespace StudyProject
         #region Instrunctions Menu
         private void Click_CreateNewSubject(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("To Create a new subject:\r\n" +
+            MessageBox.Show("To Create a a folder and needed startup files for a new subject:\r\n" +
                 "In the OneDrive's Documents Folder's  _StudyFolder sub-folder create a new folder. The Name " +
-                "of this folder should be the name of the subject (ie Subject1). In this folder" +
-                " you shold also create a text file whose name is also that of the subject (ie Subject1.txt)" +
-                "This text file should have two lines.  The  first specifying the AlphaBase (ie AlphaBase^1) " +
-                "and the second specifying the subjects name (ie Name^Subject) For Example: \r\n" +
-                "Documents\r\n" +
-                "   _StudyFolder\r\n" +
-                "       Subject1 \r\n" +
-                "           Subject1 Data.txt\r\n" +
-                "               AlphaBase^1\r\n" +
-                "               Name^Subject1");
+                "of this folder should be the name of the subject (ie Christianity). Then start this" +
+                " program, Click the Files Menu, Click Select Data Folder. When the File Chooser Dialog" +
+                " appears, move the the _StudyFolder, and single click the folder that will hold you current " +
+                "project (i.e. Christianiy) and click the 'SelectFolder' button. If the required files " +
+                "do not exist, the progam will create them. If they do exist, the program will load all of " +
+                "the required files, and will load what ever root elements you have programmed into the" +
+                " Item List Box\r\n" );
         }
+
         #endregion Instrunctions Menu
 
         #endregion MenuItems
 
         #region Private Methods
 
-        
+
         #endregion Private Methods
 
+        private void RenameItem_Click(object sender, RoutedEventArgs e)
+        {
+            // Make sure that the item to rename is a lbxItems item
+            if((lbxItems.SelectedItem == null))
+            {
+                MessageBox.Show("You Can only rename an Item in the Items List");
+            }
+            // Make sure there is a name in the tbxItemText
+            if(tbxItemText.Text == "")
+            {
+                MessageBox.Show("You Can only rename an Item if you have entered a Name in the Enter Item Text Textbox");
+            }
+
+            // Get the name for the new item
+            var NewItemText = tbxItemText.Text;
+
+            // Get the ID of the selected item
+            var ItemToRenameID = Subjects.ReturnDisplayStringID(lbxItems.SelectedItem.ToString());
+
+            // Get the Item assoicated with this ID
+            Items ItemToRename = Subjects.ReturnItemInDictionary(ItemToRenameID);
+
+            // Update this Items name
+            ItemToRename.ItemText = NewItemText;
+
+            //Return this updated Item to the Dictionary
+
+            // Send the NewChildItem to the items dictionary
+            Subjects.UpdateItemInItemsDictionay(ItemToRenameID, ItemToRename);
+
+            //TASK Rename the item in lbxItems
+
+            // Create a List of items in lbxItems and convert it to an array of string
+            List<string> LbxItems = new List<string>();
+
+            foreach(string Displaystring in lbxItems.Items)
+            {
+                LbxItems.Add(Displaystring);
+            }
+
+            string[] ArrayOfItemsList = LbxItems.ToArray();
+
+            // Get the Index of Item to be renames
+            var IndexOfItemToBeRenamed = lbxItems.SelectedIndex;
+
+            // Get the new display string in ItemToRename
+            var NewDisplayString = Subjects.CreateDisplayString(ItemToRename);
+            ArrayOfItemsList[IndexOfItemToBeRenamed] = NewDisplayString;
+
+            // Clear the current display in lbxItems
+            lbxItems.Items.Clear();
+
+            // add all of the items in ArrayOfItemsList to lbxItems
+            foreach(string NewItem in ArrayOfItemsList)
+            {
+                lbxItems.Items.Add(NewItem);
+            }
+
+        }
+
+        private void lbxItems_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            string ThisItemsDisplayString = lbxItems.SelectedItem.ToString();
+            Click_MoveToTree(this, new RoutedEventArgs());
+        }
+
+        private void lbxTree_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            ShowItemsChildren_Click(this, new RoutedEventArgs());
+        }
     }
 }

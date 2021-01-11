@@ -35,7 +35,7 @@
         <Menu Grid.Row="0">
             <MenuItem Header="_File">
                 <MenuItem x:Name="FileOpen" 
-                          Header="Open Data Files"
+                          Header="Select Data Folder"
                           Click="Click_FileOpen"/>
                 <MenuItem x:Name="FileSave"
                           Header="Save Data Files"
@@ -54,10 +54,18 @@
                           Header="Add Child Item"
                           Click="Click_AddChildItem"/>
             </MenuItem>
-            <MenuItem Header="Selected Item">
+            <MenuItem Header="_Selected Item">
                 <MenuItem Header="Move to Tree"
                           x:Name="MoveToTree"
                           Click="Click_MoveToTree"/>
+                <MenuItem Header="Show this Items Children"
+                          x:Name="ShowItemsChildren"
+                          Click="ShowItemsChildren_Click"/>
+                <MenuItem 
+                    Header="Rename Item"
+                    x:Name="RenameItem"
+                    Click="RenameItem_Click"/>
+
                 <MenuItem Header="Open Selected Item Work Page"
                           x:Name="OpenWorkPage"
                           Click="Click_OpenWorkPage"/>
@@ -79,8 +87,10 @@
         <TextBlock  Text="Tree" FontSize="18" Grid.Column="1"
                     Grid.Row="2" HorizontalAlignment="Center"/>
 
-        <ListBox x:Name="lbxItems" Grid.Row ="3" Grid.Column="0"/>
-        <ListBox x:Name="lbxTree" Grid.Row="3" Grid.Column="1"/>
+        <ListBox x:Name="lbxItems" Grid.Row ="3" Grid.Column="0"
+                 MouseDoubleClick="lbxItems_MouseDoubleClick"/>
+        <ListBox x:Name="lbxTree" Grid.Row="3" Grid.Column="1"
+                  MouseDoubleClick="lbxTree_MouseDoubleClick"/>
         <StackPanel Grid.Row="4" Grid.ColumnSpan="2"
                     Margin="2"
                     VerticalAlignment="Center"

@@ -1,4 +1,19 @@
-﻿
+﻿28. Create a SelectedItem Rename Item MenuItem
+
+27. Clean up and labeling actions
+	a. In Subjects eliminated unused SubjectData property
+	b. In Subjects removed AddItemToTreeList(string NewItem)
+	c. In Subjects removed internal static List<string> ReturnTreeList()
+	d. In Subjects remove OpenDictionaryFile()
+	e. In Subjects remove ReturnUpdatedTreeList()
+26. Create a new MenuItem in the Selected Items Menu which allows
+	you to show all of the children of the selected intem in in the Tree
+	in the Items List
+25. Change the Instructions to reflect moving from selecting a preprogrammed file
+	into selecting a folder and creating all necessary files
+24. 20210111 The dev branch was saved on GitHum as dev20210109 and merged into Master 
+	I am now back in the dev branch for further development
+=======================================================================
 23. 20210109 Corrected errors in save file and in add child and aparently everything works
 	Copy and Commit
 - - - - - - -

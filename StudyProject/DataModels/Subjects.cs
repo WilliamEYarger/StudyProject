@@ -10,11 +10,15 @@ namespace StudyProject.DataModels
 
     public static class Subjects
     {
-        // TODO- There is a problem in saving the files and in reconstructing lbxTree after adding a new child
 
         #region Private Properties
-        private static List<string> TreeItemsList;
 
+
+        /// <summary>
+        /// This is the path to the file that holds the data about 
+        /// the subject that was selected by the user in choosing 
+        /// a particular Subject folder in _StudyFolder
+        /// </summary>
         private static string SubjectFilePath;
 
         #endregion Private Properties
@@ -35,21 +39,7 @@ namespace StudyProject.DataModels
 
         #endregion ItemsListBoxStringsList
 
-        #region SubjectData
-        private static string[] _SubjectData;
-
-        public static string[] SubjectData
-        {
-            get { return _SubjectData; }
-            set { _SubjectData = value; }
-        }
-
-
-        #endregion SubjectData
-
-       
-
-        #endregion SubjectName
+               
 
         #region AlphaBase
         private static int alphaBase = 1;
@@ -73,7 +63,6 @@ namespace StudyProject.DataModels
 
         #endregion SubjectName
 
-        #region Properties
 
         #region SubjectsFolderPath
         private static string subjectsFolderPath;
@@ -114,7 +103,7 @@ namespace StudyProject.DataModels
 
         #endregion ItemsDictionary
 
-      
+
 
         #endregion Properties
 
@@ -122,13 +111,22 @@ namespace StudyProject.DataModels
 
         #region OpenSubjectFile
 
-
+        /// <summary>
+        /// 1. Receives  a path to the Subject of Interest Folder
+        /// 2. Opens the SubjectName.txt file 
+        /// 3. Loads its data into
+        ///     a. AlphaBase
+        ///     b. NumberOfRoots
+        ///     c. ItemsDictionary
+        /// 4. Add all of the root items IDs into ItemsListBoxStringsList
+        /// </summary>
         public static void OpenSubjectFile()
         {
             // Create path to this subjects  data file
             var SubjectsDataFile = SubjectsFolderPath + SubjectName + ".txt";
             SubjectFilePath = SubjectsDataFile;
 
+            #region Create a SubjectsName.txt file if it doesn't exist
             // Test to see if this file exist and if not create it
             if (!File.Exists(SubjectsDataFile))
             {
@@ -149,11 +147,16 @@ namespace StudyProject.DataModels
                 
             }
 
+            #endregion Create a SubjectsName.txt file if it doesn't exist
+
+            #region Read the lines of the SubjectName.txt file into its holding properties
             // The SubjectsDataFile already exists so read in all of its lines
             string[] SubjectsDataFileStringArray = File.ReadAllLines(SubjectsDataFile);
 
             List<string> DelimitedDictionaryItems = new List<string>();
-            
+
+            #region Load AlphaBase and Number of Roots and create List of Dictionary Items
+
             // Cycle through SubjectsDataFileStringArray assiginig the to their values
             for (int i =0; i< SubjectsDataFileStringArray.Length; i++)
             {
@@ -175,6 +178,10 @@ namespace StudyProject.DataModels
 
             }// END  Cycle through SubjectsDataFileStringArray assiginig the to their values
 
+
+            #endregion Load AlphaBase and Number of Roots and create List of Dictionary Items
+
+            #region Create ItemsDictionary and a list of RootIDs
             // Create a List<string> RootIDs
             List<string> RootIDs = new List<string>();
 
@@ -222,7 +229,14 @@ namespace StudyProject.DataModels
             }// END Cycle through DictionaryLinesArray extracting  the properties of each Item object
 
 
-            // Cycle through RootIDs creating ItemsListBoxStringsList, a list of root display strings to display upone opening
+            #endregion Create ItemsDictionary and a list of RootIDs
+
+
+            #endregion Read the lines of the SubjectName.txt file into its holding properties
+
+            #region Add all of the RootIDs to ItemsListBoxStringsList
+            // Cycle through RootIDs creating ItemsListBoxStringsList, 
+            //a list of root display strings to display upone opening
             foreach (string ID in RootIDs)
             {
                 Items NewItemsObject = new Items();
@@ -231,6 +245,7 @@ namespace StudyProject.DataModels
                 ItemsListBoxStringsList.Add(DisplayString);
             }// END Cycle through RootIDs creating ItemsListBoxStringsList, a list of root display strings to display upone opening
 
+            #endregion Add all of the RootIDs to ItemsListBoxStringsList
         }// End OpenSubjectFile()
 
 
@@ -238,19 +253,13 @@ namespace StudyProject.DataModels
 
         #endregion OpenSubjectFile
 
-        #region Open Dictionary File
-
-        public static void OpenDictionaryFile()
-        {
-            var DictionaryPath = SubjectsFolderPath + "temsDictionaryStrings.txt";
-            string[] DicgtionaryArray = File.ReadAllLines(DictionaryPath);
-        }
-
-        #endregion Open Dictionary File
-
-
         #region SaveSubjectsFile
 
+        /// <summary>
+        /// Transfers the data in AlhaBase, NumberOfRoots and _ItemsDictionary
+        /// int a List, OutputSubjectFileList, which is 
+        /// written to the SubjectName.txt file
+        /// </summary>
         public static void SaveSubjectsFile()
         {
             // Create a List<string> OutputSubjectFileList to hold the strings to be written to the Subjects file
@@ -297,6 +306,14 @@ namespace StudyProject.DataModels
         #endregion SaveSubjectsFile
 
         #region ReturnItemInDictionary
+
+        /// <summary>
+        /// The Key is the Item's ID 
+        /// The return value is a Items object of the
+        /// Item whose key was transmitted
+        /// </summary>
+        /// <param name="Key"></param>
+        /// <returns></returns>
         public static Items ReturnItemInDictionary(string Key)
         {
             Items NewItem = ItemsDictionary[Key];
@@ -310,104 +327,35 @@ namespace StudyProject.DataModels
 
         #endregion ReturnItemInDictionary
 
-        #region TreeLise
-
-
-       
-
-        
-        public static void AddItemToTreeList(string NewItem)
-        {
-            //If TreeItemsList is null create it
-            if (TreeItemsList == null)
-            {
-                TreeItemsList = new List<string>();
-            }
-            var LeadingSpacesLength = TreeItemsList.Count * (AlphaBase * 2);
-            var LeadingSpacesString = new String(' ', LeadingSpacesLength);
-            var StringToAdd = LeadingSpacesString + NewItem;
-            TreeItemsList.Add(StringToAdd);
-        }
-
-
-        /// <summary>
-        /// Position is Index of string int TreeList
-        /// NumberOfChildren is the items new number of children
-        /// </summary>
-        /// <param name="Position"></param>
-        /// <param name="NumberOfChildren"></param>
-        /// <returns></returns>
-        public static List<string> ReturnUpdatedTreeList(List<string> OldTreeList, int Position, int NumberOfChildren)
-        {
-            var StringToUpdate = OldTreeList[Position];
-            // Update the leading char
-            //      Convert the string to an array of characters
-            char[] StringToUpdateChars = StringToUpdate.ToCharArray();
-
-            //      Using the position in the List get the position of the leeding char
-            int LeedingCharPosition = Position * 2;
-
-            //      Change the leeding char to '+'
-            StringToUpdateChars[LeedingCharPosition] = '+';
-
-            // Get Position of  the delimiter before the Number of children
-            var PosLastDel = StringToUpdate.LastIndexOf('^');
-
-            // Get the front substring up to the position of the last char
-            var FrontString = StringToUpdate.Substring(0, PosLastDel);
-
-            // Convert the number of thildren to a string
-            var NumberOfChildrenStr = NumberOfChildren.ToString();
-
-            // Add the NumberOfChildrenStr to the Front string
-
-            var NewString = FrontString + NumberOfChildrenStr;
-
-            // Convert TreeList to string []
-            string[] TreeListArray = OldTreeList.ToArray();
-
-            // Replace the item at Position
-            TreeListArray[Position] = NewString;
-
-            //Reconstitute the List from this array
-            List<string> TreeList = new List<string>();
-
-            foreach(string Item in TreeListArray)
-            {
-                TreeList.Add(Item);
-            }
-            return TreeList;
-
-        }
-
-        internal static List<string> ReturnTreeList()
-        {
-            return TreeItemsList;
-        }
-
-        #endregion TreeLise
 
         #region Return Display strings of Items Children
 
-        internal static List<string> ReturnDisplaystringsOfItemsChildren(string movedItemID)
+        /// <summary>
+        /// Returns of List of Display String of the Item whose ID was transmitted
+        /// It is called by  Click_MoveToTree  method
+        /// and by  Click_ShowItemsChildren
+        /// </summary>
+        /// <param name="movedItemID"></param>
+        /// <returns></returns>
+        public static List<string> ReturnDisplaystringsOfItemsChildren(string ThisItemID)
         {
             // Create a List<string> ChidrensDisplayString
             List<string> ChidrensDisplayStringList = new List<string>();
 
             // Get the length of the Item associated with this Id
-            var ParentsIDLength = movedItemID.Length;
+            var ParentsIDLength = ThisItemID.Length;
 
             // Calculate the length of this items childrens IS
             var LengthChildID = ParentsIDLength + AlphaBase;
 
 
             // Cycle through the ItemsDictionary looking for Items whose length is
-            //   1 AlphaBase longer than movedItemID and whose ID begins with movedItemID
+            //   1 AlphaBase longer than ThisItemID and whose ID begins with ThisItemID
             foreach(KeyValuePair<string, Items> kvp in ItemsDictionary)
             {
                 var key = kvp.Key;
                 var thisItem = kvp.Value;
-                if((thisItem.ItemID.Length == LengthChildID) && (thisItem.ItemID.IndexOf(movedItemID) == 0))
+                if((thisItem.ItemID.Length == LengthChildID) && (thisItem.ItemID.IndexOf(ThisItemID) == 0))
                 {
                     // Get the Display string for thisItem
                     var thisDisplayString = CreateDisplayString(thisItem);
@@ -427,7 +375,7 @@ namespace StudyProject.DataModels
         #region ReturnDisplayString
 
         /// <summary>
-        /// Create a display string to show in a list box
+        /// It receives an Items object and returns a display string to show in a list box
         /// </summary>
         /// <param name="LeedingChar"> is a + or - </param>
         /// <param name="Text"></param>
@@ -460,7 +408,21 @@ namespace StudyProject.DataModels
             return thisItemsListString;
         }
 
+        internal static string ReturnDisplayStringID(string DisplayString)
+        {
+            return StringHelper.ReturnItemAtPos(DisplayString, '^', 1);
+        }
+
         #endregion ReturnDisplayString
+
+        #region UpdateDictionaryItem
+
+        public static void UpdateItemInItemsDictionay(string ID, Items UpdatedItem)
+        {
+            ItemsDictionary[ID] = UpdatedItem;
+        }
+
+        #endregion UpdateDictionaryItem
 
         #endregion Public Methods
 
